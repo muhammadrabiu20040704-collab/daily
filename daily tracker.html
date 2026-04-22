@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Planner & Money Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1E3A8A;
+      --secondary: #F3F4F6;
+      --accent: #F59E0B;
+      --danger: #EF4444;
+      --success: #10B981;
+      --text: #1F2937;
+      --muted: #6B7280;
+      --white: #ffffff;
+      --card: #ffffff;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--secondary);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
+    header p { font-size: 0.85rem; opacity: 0.75; margin-top: 0.25rem; }
+
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    section {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.9rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-body { padding: 1.25rem; }
+
+    /* Form */
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-row input,
+    .form-row select {
+      flex: 1 1 140px;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--white);
+      color: var(--text);
+    }
+
+    .form-row input:focus,
+    .form-row select:focus { border-color: var(--primary); }
+
+    .btn {
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-primary:hover { background: #1e40af; }
+
+    .btn-accent {
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .btn-accent:hover { background: #d97706; }
+
+    .btn-sm {
+      padding: 0.3rem 0.65rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+    }
+
+    .btn-edit { background: var(--accent); color: var(--white); }
+    .btn-edit:hover { background: #d97706; }
+    .btn-delete { background: var(--danger); color: var(--white); }
+    .btn-delete:hover { background: #dc2626; }
+
+    /* List items */
+    .list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--secondary);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .item-info { flex: 1; min-width: 0; }
+    .item-desc { font-weight: 600; font-size: 0.92rem; word-break: break-word; }
+    .item-meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .item-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    /* Money badges */
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .badge-income { background: #D1FAE5; color: #065F46; }
+    .badge-expense { background: #FEE2E2; color: #991B1B; }
+
+    /* Balance bar */
+    .balance-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .balance-card {
+      flex: 1 1 120px;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+
+    .balance-card .label { font-size: 0.75rem; font-weight: 600; opacity: 0.8; }
+    .balance-card .amount { font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem; }
+
+    .bc-income { background: #D1FAE5; color: #065F46; }
+    .bc-expense { background: #FEE2E2; color: #991B1B; }
+    .bc-balance { background: var(--primary); color: var(--white); }
+
+    /* Filter */
+    .filter-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .filter-btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      border: 1.5px solid #D1D5DB;
+      background: var(--white);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--white);
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 1.5rem 0;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary); }
+
+    .modal .form-row { margin-bottom: 0.75rem; }
+
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
+
+    /* Validation */
+    .error-msg {
+      font-size: 0.78rem;
+      color: var(--danger);
+      margin-top: -0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    @media (max-width: 500px) {
+      header h1 { font-size: 1.2rem; }
+      .balance-card .amount { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📅 Daily Planner & 💰 Money Tracker</h1>
+  <p>Stay organized. Stay on budget.</p>
+</header>
+
+<main>
+  <!-- TASK SECTION -->
+  <section id="task-section">
+    <div class="section-header">📋 Daily Tasks</div>
+    <div class="section-body">
+      <div class="form-row">
+        <input type="text" id="task-desc" placeholder="Task description..." />
+        <input type="time" id="task-time" />
+        <button class="btn btn-primary" onclick="addTask()">+ Add Task</button>
+      </div>
+      <p class="error-msg" id="task-error"></p>
+      <div class="list" id="task-list"></div>
+    </div>
+  </section>
+
+  <!-- MONEY SECTION -->
+  <section id="money-section">
+    <div class="section-header">💳 Income & Expenses</div>
+    <div class="section-body">
+      <div class="balance-bar">
+        <div class="balance-card bc-income">
+          <div class="label">Total Income</div>
+          <div class="amount" id="total-income">C:\Users\ZITDA14\Desktop\New folder\tabler--currency-naira.svg0.00</div>
+        </div>
+        <div class="balance-card bc-expense">
+          <div class="label">Total Expenses</div>
+          <div class="amount" id="total-expense">$0.00</div>
+        </div>
+        <div class="balance-card bc-balance">
+          <div class="label">Balance</div>
+          <div class="amount" id="total-balance">$0.00</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <input type="text" id="money-desc" placeholder="Description (e.g. Salary, Food)..." />
+        <input type="number" id="money-amount" placeholder="Amount" min="0" step="0.01" />
+        <select id="money-type">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <button class="btn btn-accent" onclick="addMoney()">+ Add</button>
+      </div>
+      <p class="error-msg" id="money-error"></p>
+
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" data-filter="income" onclick="setFilter('income', this)">Income</button>
+        <button class="filter-btn" data-filter="expense" onclick="setFilter('expense', this)">Expense</button>
+      </div>
+
+      <div class="list" id="money-list"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <h3>✏️ Edit Task</h3>
+    <div class="form-row">
+      <input type="text" id="edit-task-desc" placeholder="Task description..." />
+    </div>
+    <div class="form-row">
+      <input type="time" id="edit-task-time" />
+    </div>
+    <p class="error-msg" id="edit-task-error"></p>
+    <div class="modal-actions">
+      <button class="btn btn-delete" onclick="closeModal('task-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Money Modal -->
+<div class="modal-overlay" id="money-modal">
+  <div class="modal">
+    <h3>✏️ Edit Record</h3>
+    <div class="form-row">
+      <input type="text" id="edit-money-desc" placeholder="Description..." />
+    </div>
+    <div class="form-row">
+      <input type="number" id="edit-money-amount" placeholder="Amount" min="0" step="0.01" />
+      <select id="edit-money-type">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+    </div>
+    <p class="error-msg" id="edit-money-error"></p>
+    <div class="modal-actions">
+      <button class="btn btn-delete" onclick="closeModal('money-modal')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEditMoney()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let tasks = JSON.parse(localStorage.getItem('dp_tasks') || '[]');
+  let moneyRecords = JSON.parse(localStorage.getItem('dp_money') || '[]');
+  let moneyFilter = 'all';
+  let editTaskId = null;
+  let editMoneyId = null;
+
+  // ── Helpers ────────────────────────────────────────────
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+  function save() {
+    localStorage.setItem('dp_tasks', JSON.stringify(tasks));
+    localStorage.setItem('dp_money', JSON.stringify(moneyRecords));
+  }
+
+  function fmt(n) {
+    return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function fmtTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':');
+    const hr = parseInt(h);
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    return `${hr % 12 || 12}:${m} ${ampm}`;
+  }
+
+  // ── Tasks ──────────────────────────────────────────────
+  function addTask() {
+    const desc = document.getElementById('task-desc').value.trim();
+    const time = document.getElementById('task-time').value;
+    const err = document.getElementById('task-error');
+
+    if (!desc) { err.textContent = 'Please enter a task description.'; return; }
+    err.textContent = '';
+
+    tasks.push({ id: uid(), desc, time });
+    save();
+    renderTasks();
+    document.getElementById('task-desc').value = '';
+    document.getElementById('task-time').value = '';
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    save();
+    renderTasks();
+  }
+
+  function openEditTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    editTaskId = id;
+    document.getElementById('edit-task-desc').value = task.desc;
+    document.getElementById('edit-task-time').value = task.time || '';
+    document.getElementById('edit-task-error').textContent = '';
+    document.getElementById('task-modal').classList.add('open');
+  }
+
+  function saveEditTask() {
+    const desc = document.getElementById('edit-task-desc').value.trim();
+    const time = document.getElementById('edit-task-time').value;
+    const err = document.getElementById('edit-task-error');
+
+    if (!desc) { err.textContent = 'Description cannot be empty.'; return; }
+    err.textContent = '';
+
+    tasks = tasks.map(t => t.id === editTaskId ? { ...t, desc, time } : t);
+    save();
+    renderTasks();
+    closeModal('task-modal');
+  }
+
+  function renderTasks() {
+    const list = document.getElementById('task-list');
+    if (!tasks.length) {
+      list.innerHTML = '<p class="empty">No tasks yet. Add one above!</p>';
+      return;
+    }
+    list.innerHTML = tasks.map(t => `
+      <div class="list-item">
+        <div class="item-info">
+          <div class="item-desc">${escHtml(t.desc)}</div>
+          ${t.time ? `<div class="item-meta">⏰ ${fmtTime(t.time)}</div>` : ''}
+        </div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-edit" onclick="openEditTask('${t.id}')">Edit</button>
+          <button class="btn btn-sm btn-delete" onclick="deleteTask('${t.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Money ──────────────────────────────────────────────
+  function addMoney() {
+    const desc = document.getElementById('money-desc').value.trim();
+    const amount = parseFloat(document.getElementById('money-amount').value);
+    const type = document.getElementById('money-type').value;
+    const err = document.getElementById('money-error');
+
+    if (!desc) { err.textContent = 'Please enter a description.'; return; }
+    if (isNaN(amount) || amount <= 0) { err.textContent = 'Please enter a valid amount.'; return; }
+    err.textContent = '';
+
+    moneyRecords.push({ id: uid(), desc, amount, type });
+    save();
+    renderMoney();
+    document.getElementById('money-desc').value = '';
+    document.getElementById('money-amount').value = '';
+    document.getElementById('money-type').value = 'income';
+  }
+
+  function deleteMoney(id) {
+    moneyRecords = moneyRecords.filter(r => r.id !== id);
+    save();
+    renderMoney();
+  }
+
+  function openEditMoney(id) {
+    const rec = moneyRecords.find(r => r.id === id);
+    if (!rec) return;
+    editMoneyId = id;
+    document.getElementById('edit-money-desc').value = rec.desc;
+    document.getElementById('edit-money-amount').value = rec.amount;
+    document.getElementById('edit-money-type').value = rec.type;
+    document.getElementById('edit-money-error').textContent = '';
+    document.getElementById('money-modal').classList.add('open');
+  }
+
+  function saveEditMoney() {
+    const desc = document.getElementById('edit-money-desc').value.trim();
+    const amount = parseFloat(document.getElementById('edit-money-amount').value);
+    const type = document.getElementById('edit-money-type').value;
+    const err = document.getElementById('edit-money-error');
+
+    if (!desc) { err.textContent = 'Description cannot be empty.'; return; }
+    if (isNaN(amount) || amount <= 0) { err.textContent = 'Please enter a valid amount.'; return; }
+    err.textContent = '';
+
+    moneyRecords = moneyRecords.map(r => r.id === editMoneyId ? { ...r, desc, amount, type } : r);
+    save();
+    renderMoney();
+    closeModal('money-modal');
+  }
+
+  function setFilter(f, btn) {
+    moneyFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderMoney();
+  }
+
+  function renderMoney() {
+    const income = moneyRecords.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0);
+    const expense = moneyRecords.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
+    const balance = income - expense;
+
+    document.getElementById('total-income').textContent = fmt(income);
+    document.getElementById('total-expense').textContent = fmt(expense);
+    const balEl = document.getElementById('total-balance');
+    balEl.textContent = fmt(balance);
+    balEl.style.color = balance < 0 ? '#FCA5A5' : '';
+
+    const filtered = moneyFilter === 'all' ? moneyRecords : moneyRecords.filter(r => r.type === moneyFilter);
+    const list = document.getElementById('money-list');
+
+    if (!filtered.length) {
+      list.innerHTML = '<p class="empty">No records found.</p>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(r => `
+      <div class="list-item">
+        <div class="item-info">
+          <div class="item-desc">${escHtml(r.desc)}</div>
+          <div class="item-meta">
+            <span class="badge badge-${r.type}">${r.type === 'income' ? '▲ Income' : '▼ Expense'}</span>
+          </div>
+        </div>
+        <div style="font-weight:700;color:${r.type === 'income' ? '#065F46' : '#991B1B'};white-space:nowrap;">
+          ${r.type === 'income' ? '+' : '-'}${fmt(r.amount)}
+        </div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-edit" onclick="openEditMoney('${r.id}')">Edit</button>
+          <button class="btn btn-sm btn-delete" onclick="deleteMoney('${r.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Modal ──────────────────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  // ── XSS guard ─────────────────────────────────────────
+  function escHtml(str) {
+    return str.replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+  }
+
+  // ── Enter key shortcuts ────────────────────────────────
+  document.getElementById('task-desc').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+  document.getElementById('money-amount').addEventListener('keydown', e => { if (e.key === 'Enter') addMoney(); });
+
+  // ── Init ───────────────────────────────────────────────
+  renderTasks();
+  renderMoney();
+</script>
+</body>
+</html>
