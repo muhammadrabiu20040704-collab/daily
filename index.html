@@ -286,15 +286,15 @@
       <div class="balance-bar">
         <div class="balance-card bc-income">
           <div class="label">Total Income</div>
-          <div class="amount" id="total-income">C:\Users\ZITDA14\Desktop\New folder\tabler--currency-naira.svg0.00</div>
+          <div class="amount" id="total-income">₦0.00</div>
         </div>
         <div class="balance-card bc-expense">
           <div class="label">Total Expenses</div>
-          <div class="amount" id="total-expense">$0.00</div>
+          <div class="amount" id="total-expense">₦0.00</div>
         </div>
         <div class="balance-card bc-balance">
           <div class="label">Balance</div>
-          <div class="amount" id="total-balance">$0.00</div>
+          <div class="amount" id="total-balance">₦0.00</div>
         </div>
       </div>
 
@@ -377,7 +377,7 @@
   }
 
   function fmt(n) {
-    return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return '₦' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   function fmtTime(t) {
